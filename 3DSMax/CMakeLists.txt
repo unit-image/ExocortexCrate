@@ -1,129 +1,62 @@
-#cmake_minimum_required (VERSION 2.6) 
+cmake_minimum_required(VERSION 3.7)
 
-project ( Max${Max_VERSION}ExocortexAlembic${crate_VERSION} ) 
+# ~~~~~~~~~~~~~~~~~~
+# ~~~~~ 3DSMax ~~~~~
+# ~~~~~~~~~~~~~~~~~~
 
-INCLUDE(../../ExocortexCMakeShared.txt NO_POLICY_SCOPE)
-  
+message("")
 
-add_definitions( -D_SCL_SECURE_NO_WARNINGS ) 
-add_definitions( -D_CRT_SECURE_NO_WARNINGS )
-add_definitions( -Dcrate_Max_Version=${Max_VERSION} )
+# Sets max's libraries
+set(3DSMAX_LIBRARY_DIR "${EXOCORTEX_CRATE_DEPS}/libs/max-sdk-2018")
+file(GLOB 3DSMAX_LIBRARIES "${3DSMAX_LIBRARY_DIR}/*.lib")
 
-if( Max_VERSION MATCHES "2013" OR  Max_VERSION MATCHES "2014" OR Max_VERSION MATCHES "2015" OR Max_VERSION MATCHES "2016" OR Max_VERSION MATCHES "2017")
-	add_definitions( -D_UNICODE ) 
-	add_definitions( -DUNICODE ) 
-endif()
+message("max: Libraries:")
+foreach(LIB ${3DSMAX_LIBRARIES})
+	message("max: Release/library:(${LIB})")
+endforeach(LIB)
 
-if( Max_VERSION MATCHES "2012" OR Max_VERSION MATCHES "2013" OR Max_VERSION MATCHES "2014")
-	set( TP ON )
-else()
-	set( TP OFF )
-endif()
-
-SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zm124" )
- 
-SET( 3DSMAX_DIR_ROOT ${LIBRARY_ROOT}/Max/${Max_VERSION} ) 
-if( NOT EXISTS ${3DSMAX_DIR_ROOT} )
-	SET( 3DSMAX_DIR_ROOT ${LIBRARY_ROOT}/Max ) 
-endif()
-if( NOT EXISTS ${3DSMAX_DIR_ROOT} )
-	message(FATAL_ERROR "Can't find 3DSMAX_DIR_ROOT: ${3DSMAX_DIR_ROOT}" )
-endif()
-SET( 3DSMAX_DIR_INCLUDE ${3DSMAX_DIR_ROOT}/include )
-if( NOT EXISTS ${3DSMAX_DIR_INCLUDE} )
-	message(FATAL_ERROR "Can't find 3DSMAX_DIR_INCLUDE: ${3DSMAX_DIR_INCLUDE}" )
-endif()
-
-if( TP )
-	add_definitions( -DTHINKING_PARTICLES ) 
-
-	SET( TP_DIR_ROOT ${LIBRARY_ROOT}/TP/TP5.0_SDK ) 
-	if( NOT EXISTS ${TP_DIR_ROOT} )
-		message(FATAL_ERROR "Can't find TP_DIR_ROOT: ${TP_DIR_ROOT}" )
-	endif()
-	SET( TP_DIR_INCLUDE ${TP_DIR_ROOT}/include )
-	if( NOT EXISTS ${TP_DIR_INCLUDE} )
-		message(FATAL_ERROR "Can't find TP_DIR_INCLUDE: ${TP_DIR_INCLUDE}" )
-	endif()
-	
-	SET( TPL_DIR_ROOT ${LIBRARY_ROOT}/TP/TPLightlineSDK ) 
-	if( NOT EXISTS ${TPL_DIR_ROOT} )
-		message(FATAL_ERROR "Can't find TPL_DIR_ROOT: ${TPL_DIR_ROOT}" )
-	endif()
-	SET( TPL_DIR_INCLUDE ${TPL_DIR_ROOT}/include )
-	if( NOT EXISTS ${TPL_DIR_INCLUDE} )
-		message(FATAL_ERROR "Can't find TPL_DIR_INCLUDE: ${TPL_DIR_INCLUDE}" )
-	endif()
-endif()
- 
-get_filename_component( BASE_DIR "${CMAKE_CURRENT_SOURCE_DIR}" PATH )
-set( LOCAL_CMAKE_FILE_NAME "${BASE_DIR}/CMakeLists.txt" )
-
-include_directories( ${BASE_DIR}/Shared )
-
-file(GLOB_RECURSE Shared ${BASE_DIR}/Shared/*.*)
-file(GLOB Sources ${BASE_DIR}/*.cpp)
-file(GLOB Includes ${BASE_DIR}/*.h)
-
-file(GLOB_RECURSE Scripts ${BASE_DIR}/MaxScripts/*.*)
-
-SOURCE_GROUP("Source Files" FILES ${Sources})   
-SOURCE_GROUP("Header Files" FILES ${Includes})
-SOURCE_GROUP("_Maxscripts" FILES ${Scripts})
-
-setup_precompiled_header( ${BASE_DIR} ${Sources} )
+# Sets boost's includes
+set(3DSMAX_INCLUDE_DIR "${EXOCORTEX_CRATE_DEPS}/includes/max-sdk-2018")
+message("max: include_dir:(${3DSMAX_INCLUDE_DIR})")
 
 
-IF( WIN32 )
-	IF( ${ALEMBIC64} )
-		IF( Max_VERSION MATCHES "2015" OR Max_VERSION MATCHES "2016" OR Max_VERSION MATCHES "2017"  )
-			SET( 3DSMAX_DIR_LIBRARY ${3DSMAX_DIR_ROOT}/lib/x64/Release )
-		ELSE()
-			SET( 3DSMAX_DIR_LIBRARY ${3DSMAX_DIR_ROOT}/x64/lib )
-		ENDIF()
-		SET( TPL_DIR_LIBRARY ${TPL_DIR_ROOT}/${Max_VERSION}/x64/lib )
-	ELSE()
-	ENDIF()	
-ENDIF()
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# ~~~~~ EXOCORTEX-CRATE-3DSMAX ~~~~
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-SET( 3DSMAX_LIBRARIES core geom gfx maxutil mesh paramblk2 mnmath poly ParticleFlow particle maxscrpt edmodel) 
+message("")
+message("${EXOCORTEX_CRATE_3DSMAX_PROJECT_NAME}: BUILD ENABLE")
+message("${EXOCORTEX_CRATE_3DSMAX_PROJECT_NAME}: Library:(SHARED)")
 
-set( Sources ${Sources} ${BASE_DIR}/Alembic.rc )
+# Sets Exocortex-Crate-3dsMax configuration
+add_definitions(-Dcrate_Max_Version=2018)
 
-include_directories( ${3DSMAX_DIR_INCLUDE} )
-link_directories( ${3DSMAX_DIR_LIBRARY} )
+# Sets Exocortex-Crate-3dsMax compiler flags
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zm124")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHa")
 
-include_directories( ${TP_DIR_INCLUDE} )
-link_directories( ${TP_DIR_LIBRARY} )
+# Gets all the source code (both .c and .h files)
+file(GLOB_RECURSE CppFiles *.cpp)
+file(GLOB_RECURSE HFiles *.h)
+file(GLOB RcFiles resource.rc)
 
-include_directories( ${TPL_DIR_INCLUDE} )
-link_directories( ${TPL_DIR_LIBRARY} )
+# Compiles Exocortex-Crate-3DSMax
+add_library(${EXOCORTEX_CRATE_3DSMAX_PROJECT_NAME} SHARED ${CppFiles} ${HFiles} ${RcFiles})
 
-add_library( ${PROJECT_NAME} SHARED ${Sources} ${Includes}  ${LOCAL_CMAKE_FILE_NAME} ${Scripts} )
+# Set shared library extension
+set_target_properties(${EXOCORTEX_CRATE_3DSMAX_PROJECT_NAME} PROPERTIES SUFFIX ".dlu")
 
-TARGET_LINK_LIBRARIES( ${PROJECT_NAME}
-	CommonUtils
-	${ALL_ALEMBIC_LIBS}
-	${3DSMAX_LIBRARIES}
-	)
-ADD_DEPENDENCIES( ${PROJECT_NAME} AlembicAbcGeom ) 
+# Creates install target
+install(TARGETS ${EXOCORTEX_CRATE_3DSMAX_PROJECT_NAME}
+		RUNTIME DESTINATION bin
+		LIBRARY DESTINATION lib
+		ARCHIVE DESTINATION lib/static)
+install(DIRECTORY "${EXOCORTEX_CRATE_3DSMAX_DIR}" DESTINATION "${EXOCORTEX_CRATE_PATH}/build_install" FILES_MATCHING PATTERN "*.h")
 
-SET_TARGET_PROPERTIES( ${PROJECT_NAME} PROPERTIES SUFFIX ".dlu" ) 
+# Links Exocortex-Crate-Utils target to Exocortex-Crate-3DSMax
+target_link_libraries(${EXOCORTEX_CRATE_3DSMAX_PROJECT_NAME} "${EXOCORTEX_CRATE_UTILS_PROJECT_NAME}")
+target_include_directories(${EXOCORTEX_CRATE_3DSMAX_PROJECT_NAME} PUBLIC "${EXOCORTEX_CRATE_UTILS_DIR}")
 
-set( PluginDirectory "${CMAKE_CURRENT_SOURCE_DIR}/Plugin" )
-
-remove_dir( ${PluginDirectory} )
-
-copy_directory( "${BASE_DIR}/MaxScripts" ${PluginDirectory} )
-get_target_property( OutputFilePath ${PROJECT_NAME} LOCATION )
-
-copy_file_to_directory( ${OutputFilePath} ${PluginDirectory} )
-
-SET( Install_DIR ${Exocortex_INSTALL_BASE_DIR}/Max${Max_VERSION}/ )
-
-remove_dir( ${Install_DIR} )
-
-copy_directory( "${BASE_DIR}/MaxScripts" ${Install_DIR} )
-
-get_target_property( Install_TARGET ${PROJECT_NAME} LOCATION )
-copy_file_to_directory( ${Install_TARGET} ${Install_DIR} )
+# Links 3DSMax target to Exocortex-Crate-3DSMax
+target_link_libraries(${EXOCORTEX_CRATE_3DSMAX_PROJECT_NAME} "${3DSMAX_LIBRARIES}")
+target_include_directories(${EXOCORTEX_CRATE_3DSMAX_PROJECT_NAME} PUBLIC "${3DSMAX_INCLUDE_DIR}")

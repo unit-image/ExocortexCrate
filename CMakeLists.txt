@@ -1,358 +1,195 @@
-cmake_minimum_required(VERSION 2.6)
-
-# Have Linux builds use the same _DEBUG / NDEBUG defines as Microsoft's C++ compiler.
-if( UNIX )
-	IF (CMAKE_BUILD_TYPE MATCHES "Debug" )
-		ADD_DEFINITIONS(-D_DEBUG)
-	ELSE()
-		ADD_DEFINITIONS(-DNDEBUG)
-	ENDIF()
-ENDIF()
-
-SET( PROJECT_NAME "ExocortexCrate" )
-
-IF (UNIX AND NOT APPLE )
-	ADD_DEFINITIONS(-DLINUX )
-ENDIF()
-
-IF( WIN32 )
-	ADD_DEFINITIONS( -D_WIN64 -DWIN64 )
-ENDIF()
-
-set( Exocortex_INSTALL_BASE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/install" )
-
-if( HDF5_ENABLE_THREADSAFE )
-	add_definitions( -DH5_HAVE_THREADSAFE )
-	if( WIN32 )
-		SET( PROJECT_NAME "${PROJECT_NAME}_Windows7" )
-		set( Exocortex_INSTALL_BASE_DIR ${Exocortex_INSTALL_BASE_DIR}/Windows7 )
-	elseif( UNIX )
-		IF (CMAKE_BUILD_TYPE MATCHES "Debug")
-			SET( PROJECT_NAME "${PROJECT_NAME}_LinuxDebug" )
-			set( Exocortex_INSTALL_BASE_DIR ${Exocortex_INSTALL_BASE_DIR}/LinuxDebug )
-		ELSE()
-			SET( PROJECT_NAME "${PROJECT_NAME}_LinuxRelease" )
-			set( Exocortex_INSTALL_BASE_DIR ${Exocortex_INSTALL_BASE_DIR}/LinuxRelease )
-		ENDIF()
-	else()
-		message(FATAL_ERROR "Should not get here")
-	endif()
-else()
-	SET( PROJECT_NAME "${PROJECT_NAME}_WindowsXP" )
-	if( WIN32 )
-		set( Exocortex_INSTALL_BASE_DIR ${Exocortex_INSTALL_BASE_DIR}/WindowsXP )
-	else()
-		message(FATAL_ERROR "Should not get here")
-	endif()
-endif()
-
-if( MSVC9 )
-	SET( PROJECT_NAME "${PROJECT_NAME}_2008" )
-elseif( MSVC10 )
-	SET( PROJECT_NAME "${PROJECT_NAME}_2010" )
-elseif( MSVC11 )
-	SET( PROJECT_NAME "${PROJECT_NAME}_2012" )
-endif()
+cmake_minimum_required(VERSION 3.7)
 
 
-project( ${PROJECT_NAME} )
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# ~~~~~ Exocortex-Crate ~~~~~
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-INCLUDE(./ExocortexCMakeShared.txt)
+set(EXOCORTEX_CRATE_PROJECT_NAME "Exocortex-Crate")
 
-set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-set( HDF5Folder "HDF5" )
-set( ZlibFolder "HDF5" )
-set( IlmBaseFolder "Alembic" )
-set( AlembicFolder "Alembic" )
+message("")
+message("${EXOCORTEX_CRATE_PROJECT_NAME}: BUILD ENABLE")
+message("${EXOCORTEX_CRATE_PROJECT_NAME}: Library:(SHARED)")
 
-SET(DIR_SOFTIMAGEALEBMIC ${CMAKE_CURRENT_SOURCE_DIR})
+project(${EXOCORTEX_CRATE_PROJECT_NAME})
 
-get_filename_component( LIBRARY_ROOT "${CMAKE_CURRENT_SOURCE_DIR}" PATH )
-set( LIBRARY_VERSION "20160502.02" )
-set( LIBRARY_ROOT "${LIBRARY_ROOT}/Libraries.${LIBRARY_VERSION}" )
-if( NOT EXISTS ${LIBRARY_ROOT} )
-	message( "!!!" )
-	message( "!!! Download the latest library from here: " )
-	message( "!!! https://s3-us-west-2.amazonaws.com/exocortex-downloads/Libraries.${LIBRARY_VERSION}.7z")
-	message( "!!!" )
-	message( FATAL_ERROR "Can't find LIBRARY_ROOT: ${LIBRARY_ROOT}" )
-endif()
+# Sets Exocortex-Crate's sources directory
+set(EXOCORTEX_CRATE_PATH "${${EXOCORTEX_CRATE_PROJECT_NAME}_SOURCE_DIR}")
 
-# Configuration
-SET( crate_MAJOR_VERSION "1" )
-SET( crate_MINOR_VERSION "1" )
-SET( crate_BUILD_VERSION "151")
-SET( crate_VERSION "${crate_MAJOR_VERSION}.${crate_MINOR_VERSION}" )
-SET( crate_FULLVERSION "${crate_MAJOR_VERSION}.${crate_MINOR_VERSION}.${crate_BUILD_VERSION}" )
+# Exocortex-Crate configuration
+add_definitions(-D_UNICODE)
+add_definitions(-DUNICODE)
+add_definitions(-D_SILENCE_STDEXT_HASH_DEPRECATION_WARNINGS)
+add_definitions(-D_SCL_SECURE_NO_WARNINGS)
+add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 
-add_definitions( "-Dcrate_MAJOR_VERSION=${crate_MAJOR_VERSION}" )
-add_definitions( "-Dcrate_MINOR_VERSION=${crate_MINOR_VERSION}" )
-add_definitions( "-Dcrate_BUILD_VERSION=${crate_BUILD_VERSION}" )
+# Sets Exocortex-Crate compiler flags
+set(CompilerFlags
+        CMAKE_CXX_FLAGS
+        CMAKE_CXX_FLAGS_DEBUG
+        CMAKE_CXX_FLAGS_RELEASE
+        CMAKE_C_FLAGS
+        CMAKE_C_FLAGS_DEBUG
+        CMAKE_C_FLAGS_RELEASE
+        )
 
-setup_os_name()
-setup_cpu_name()
+foreach(CompilerFlag ${CompilerFlags})
+  string(REPLACE "/MT" "/MD" ${CompilerFlag} "${${CompilerFlag}}")
+endforeach()
 
-SET( ALEMBIC64 0 )
-IF( WIN32 )
-	IF( CMAKE_SIZEOF_VOID_P MATCHES "8" )
-		SET( ALEMBIC64 1 )
-	ENDIF( CMAKE_SIZEOF_VOID_P MATCHES "8" )
-ENDIF( WIN32 )
+# Sets custom directories for both shared and static libraries
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-IF( UNIX )
-	IF( CMAKE_SIZEOF_VOID_P MATCHES "8" )
-		SET( ALEMBIC64 1 )
-	ENDIF( CMAKE_SIZEOF_VOID_P MATCHES "8" )
-ENDIF( UNIX )
+# Sets Exocortex-Crate version
+set(crate_MAJOR_VERSION "1")
+set(crate_MINOR_VERSION "1")
+set(crate_BUILD_VERSION "151")
+set(crate_VERSION "${crate_MAJOR_VERSION}.${crate_MINOR_VERSION}")
+set(crate_FULLVERSION "${crate_MAJOR_VERSION}.${crate_MINOR_VERSION}.${crate_BUILD_VERSION}")
 
-IF( UNIX )
-	# Issues with fpic (requires position independent code option during linking to these libs).
+add_definitions("-Dcrate_MAJOR_VERSION=${crate_MAJOR_VERSION}")
+add_definitions("-Dcrate_MINOR_VERSION=${crate_MINOR_VERSION}")
+add_definitions("-Dcrate_BUILD_VERSION=${crate_BUILD_VERSION}")
+add_definitions(-Dcrate_ver=crate-${crate_FULLVERSION})
 
-	# C Flags
-	SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC"  )
-	SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g3"  )
-	#SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -fPIC"  )
+# Sets install target directory
+set(CMAKE_INSTALL_PREFIX "${EXOCORTEX_CRATE_PATH}/build_install" CACHE PATH "Install target directory" FORCE)
 
-	# C++ Flags
-	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC"  )
-	SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_RELEASE} -g3"  )
-	#SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -fPIC"  )
+# ~~~~~~~~~~~~~~~~~~~~~~~~
+# ~~~~~ Dependencies ~~~~~
+# ~~~~~~~~~~~~~~~~~~~~~~~~
 
-ENDIF()
-
-# Boost.
-set( BOOST_INCLUDEDIR "${LIBRARY_ROOT}/boost/include/boost-1_44" )
-
-if ( UNIX )
-	set ( BOOST_OSDIR "linux" )
-	set( OS_NAME "linux" )
-elseif( WIN32 )
-	set ( BOOST_OSDIR "windows" )
-	set( OS_NAME "windows" )
-else()
-	message(FATAL_ERROR "Should not get here")
-endif()
-
-if( CMAKE_SIZEOF_VOID_P MATCHES "8" )
-	set( CPU_NAME "x64" )
-	set( BOOST_LIBRARYDIR "${LIBRARY_ROOT}/boost/lib/x64/${BOOST_OSDIR}" )
-elseif( CMAKE_SIZEOF_VOID_P MATCHES "4" )
-	set( CPU_NAME "x86" )
-	set( BOOST_LIBRARYDIR "${LIBRARY_ROOT}/boost/lib/x86/${BOOST_OSDIR}" )
-else()
-	message(FATAL_ERROR "Should not get here")
-endif()
-
-#MESSAGE( "BOOST_INCLUDEDIR: ${BOOST_INCLUDEDIR}" )
-#MESSAGE( "BOOST_LIBRARYDIR: ${BOOST_LIBRARYDIR}" )
-if( NOT EXISTS ${BOOST_INCLUDEDIR} )
-	message(FATAL_ERROR "Can't find BOOST_INCLUDEDIR: ${BOOST_INCLUDEDIR}" )
-endif()
-
-if( NOT EXISTS ${BOOST_LIBRARYDIR} )
-	message(FATAL_ERROR "Can't find BOOST_LIBRARYDIR: ${BOOST_LIBRARYDIR}" )
-endif()
-
-# Boost
-set(Boost_USE_STATIC_LIBS ON)
-set(Boost_USE_MULTITHREADED ON)
-set(Boost_DETAILED_FAILURE_MSG ON )
-set(Boost_USE_STATIC_RUNTIME ON)
-set(Boost_NO_SYSTEM_PATHS true )
-
-if( MSVC11 OR MSVC10 )
-	set(BOOST_COMPONENTS date_time program_options regex thread iostreams filesystem system unit_test_framework )
-else()
-	set(BOOST_COMPONENTS date_time program_options regex thread iostreams python filesystem system unit_test_framework )
-endif()
-
-find_package( Boost 1.44.0 COMPONENTS REQUIRED ${BOOST_COMPONENTS} )
-
-include_directories( ${Boost_INCLUDE_DIRS} )
-link_directories( ${Boost_LIBRARY_DIRS} )
-
-IF( WIN32 )
-	#We statically link to reduce dependancies (copied from Bullet CMakeLists.txt)
-	FOREACH(flag_var CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO)
-		IF(${flag_var} MATCHES "/MD")
-			STRING(REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
-		ENDIF(${flag_var} MATCHES "/MD")
-		IF(${flag_var} MATCHES "/MDd")
-			STRING(REGEX REPLACE "/MDd" "/MTd" ${flag_var} "${${flag_var}}")
-		ENDIF(${flag_var} MATCHES "/MDd")
-	ENDFOREACH(flag_var)
-endif()
-
-# For multithreaded builds
-# [mkonyk] Fix ~ these are only valid on Windows platforms.
-IF( WIN32 )
-	SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP" )
-	SET( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /MP" )
-
-	# For Alembic library
-	SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /DPLATFORM_WINDOWS" )
-ENDIF( WIN32 )
-
-SET( ILMBASE_ROOT_DIR "Shared/ilmbase-1.0.2" )
-SET( ZLIB_ROOT_DIR "Shared/zlib-1.2.5" )
-SET( HDF_ROOT_DIR "Shared/hdf5-1.8.9" )
-SET( ALEMBIC_ROOT_DIR "Shared/alembic-1.5.0" )
-SET( ALEMBIC_NO_TESTS TRUE )
-SET( ALEMBIC_NO_BOOTSTRAP TRUE )
-SET( ALEMBIC_NO_OPENGL TRUE )
-
-add_definitions( -Dalembic_ver=${ALEMBIC_ROOT_DIR} )
-add_definitions( -Dhdf_ver=${HDF_ROOT_DIR} )
-add_definitions( -Dcrate_ver=crate-${crate_FULLVERSION} )
-
-# ILM Math
-include_directories( "${ILMBASE_ROOT_DIR}/Half" )
-include_directories( "${ILMBASE_ROOT_DIR}/Iex" )
-include_directories( "${ILMBASE_ROOT_DIR}/IlmThread" )
-include_directories( "${ILMBASE_ROOT_DIR}/Imath" )
-
-ADD_SUBDIRECTORY ( ${ILMBASE_ROOT_DIR} )
-SET( ALEMBIC_ILMBASE_LIBS ilmbase )
-
-# ZLib
-SET( BUILD_SHARED_LIBS OFF )
-SET( SKIP_INSTALL_ALL ON )
-SET( SKIP_INSTALL_LIBRARIES ON )
-
-# For multithreaded builds
-IF( WIN32 )
-	SET( CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} /MTd" )
-	SET( CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} /MTd" )
-	SET( CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} /MT" )
-	SET( CMAKE_C_FLAGS_MINSIZEREL "${CMAKE_C_FLAGS_MINSIZEREL} /MT" )
-ENDIF()
+# Sets dependencies path
+set(EXOCORTEX_CRATE_DEPS "${EXOCORTEX_CRATE_PATH}/deps/Exocortex-Crate-WindowsDeps")
 
 
+# ~~~~~~~~~~~~~~~~~
+# ~~~~~ Boost ~~~~~
+# ~~~~~~~~~~~~~~~~~
 
-include_directories( ${ZLIB_ROOT_DIR} )
-include_directories("${CMAKE_CURRENT_BINARY_DIR}/${ZLIB_ROOT_DIR}" )
+message("")
 
-ADD_SUBDIRECTORY ( ${ZLIB_ROOT_DIR} )
-SET( ALEMBIC_ZLIB_LIBS zlib )
+# Sets boost's libraries
+set(BOOST_LIBRARY_DIR "${EXOCORTEX_CRATE_DEPS}/libs/boost-1.61.0")
+file(GLOB BOOST_LIBRARIES "${BOOST_LIBRARY_DIR}/*.lib")
 
-# HDF
-SET( ZLIB_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/${ZLIB_ROOT_DIR}" )
-SET( H5_HAVE_ZLIB_H ON )
-SET( H5_ZLIB_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/${ZLIB_ROOT_DIR}/zlib.h" )
-SET( ZLIB_LIBRARY zlib )
-SET( H5_HAVE_FILTER_DEFLATE ON )
-SET(HDF5_ENABLE_THREADSAFE ON CACHE BOOL "Thread safety")
-SET(HDF5_ENABLE_SZIP_SUPPORT OFF CACHE BOOL "Disable sZip")
-SET(HDF5_BUILD_HL_LIB ON CACHE BOOL "Build high level lib")
+message("boost: Libraries:")
+foreach(LIB ${BOOST_LIBRARIES})
+	message("boost: Release/library:(${LIB})")
+endforeach(LIB)
 
-ADD_SUBDIRECTORY ( ${HDF_ROOT_DIR} )
-include_directories( "${HDF_ROOT_DIR}/src" )
-include_directories( "${HDF_ROOT_DIR}/hl/src" )
-include_directories( "${HDF_ROOT_DIR}/c++/src" )
-include_directories( "${HDF_ROOT_DIR}/hl/c++/src" )
-include_directories( "${CMAKE_CURRENT_BINARY_DIR}/${HDF_ROOT_DIR}" )
-SET( ALEMBIC_HDF5_LIBS hdf5 hdf5_hl )
-
-# reset the output directories
-UNSET(CMAKE_RUNTIME_OUTPUT_DIRECTORY CACHE)
-UNSET(CMAKE_LIBRARY_OUTPUT_DIRECTORY CACHE)
-UNSET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY CACHE)
-
-# Alembic
-add_definitions( -DNOMINMAX )	 # disable min/max macros from <windows.h>.
-include_directories( ${ALEMBIC_ROOT_DIR} )
-ADD_SUBDIRECTORY ( ${ALEMBIC_ROOT_DIR} )
-SET( ALEMBIC_CORE_LIBS AlembicAbcMaterial AlembicAbcGeom AlembicAbc AlembicAbcCoreHDF5 AlembicAbcCoreOgawa AlembicAbcCoreAbstract AlembicAbcCoreFactory AlembicOgawa AlembicUtil )
-
-SET( ALL_ALEMBIC_LIBS ${ALEMBIC_CORE_LIBS} ${ALEMBIC_HDF5_LIBS} ${ALEMBIC_ZLIB_LIBS}
-		${ALEMBIC_ILMBASE_LIBS} ${ZLIB_LIBRARIES} ${Boost_LIBRARIES} )
-
-ADD_SUBDIRECTORY ( "${CMAKE_CURRENT_SOURCE_DIR}/Shared/CommonUtils" "${CMAKE_CURRENT_BINARY_DIR}/Shared/CommonUtils" )
-
-include_directories( "${CMAKE_CURRENT_SOURCE_DIR}/Shared/CommonUtils" )
+# Sets boost's includes
+set(BOOST_INCLUDE_DIR "${EXOCORTEX_CRATE_DEPS}/includes/boost-1.61.0")
+message("boost: include_dir:(${BOOST_INCLUDE_DIR})")
 
 
-add_definitions( -D_WINSOCKAPI_ )
-add_definitions( -D_WINSOCKAPI2_ )
+# ~~~~~~~~~~~~~~~~
+# ~~~~~ hdf5 ~~~~~
+# ~~~~~~~~~~~~~~~~
+
+message("")
+
+# Sets hdf5 version
+add_definitions(-Dhdf_ver=1.8.20)
+
+# hdf5 configuration
+add_definitions(-DH5_HAVE_THREADSAFE)
+
+# Sets hdf5's libraries
+set(HDF5_LIBRARY_DIR "${EXOCORTEX_CRATE_DEPS}/libs/hdf5-1.8.20")
+set(HDF5_LIBRARIES "${HDF5_LIBRARY_DIR}/libhdf5.lib" "${HDF5_LIBRARY_DIR}/libhdf5_hl.lib")
+
+message("hdf5: Libraries:")
+foreach(LIB ${HDF5_LIBRARIES})
+	message("hdf5: Release/library:(${LIB})")
+endforeach(LIB)
+
+# Sets hdf5's includes
+set(HDF5_INCLUDE_DIR "${EXOCORTEX_CRATE_DEPS}/includes/hdf5-1.8.20")
+message("hdf5: include_dir:(${HDF5_INCLUDE_DIR})")
 
 
-# Python extension
-IF(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Python/CMakeLists.txt")
-	if( NOT MSVC10 AND NOT MSVC11 )
-		ADD_SUBDIRECTORY ( "${CMAKE_CURRENT_SOURCE_DIR}/Python/2.6.7" "${CMAKE_CURRENT_BINARY_DIR}/ExocortexAlembicPython/2.6.7" )
-		if( WIN32 )
-			ADD_SUBDIRECTORY ( "${CMAKE_CURRENT_SOURCE_DIR}/Python/2.7.2" "${CMAKE_CURRENT_BINARY_DIR}/ExocortexAlembicPython/2.7.2" )
-		else()
-			ADD_SUBDIRECTORY ( "${CMAKE_CURRENT_SOURCE_DIR}/Python/2.5.2" "${CMAKE_CURRENT_BINARY_DIR}/ExocortexAlembicPython/2.5.2" )
-		endif()
-	endif()
-ENDIF()
+# ~~~~~~~~~~~~~~~~
+# ~~~~~ ZLIB ~~~~~
+# ~~~~~~~~~~~~~~~~
 
-# Arnold dso
-IF(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Arnold/CMakeLists.txt")
-	if( NOT MSVC10 AND NOT MSVC11 )
-		ADD_SUBDIRECTORY ( "${CMAKE_CURRENT_SOURCE_DIR}/Arnold/3" "${CMAKE_CURRENT_BINARY_DIR}/ExocortexAlembicArnold/3" )
-		ADD_SUBDIRECTORY ( "${CMAKE_CURRENT_SOURCE_DIR}/Arnold/4" "${CMAKE_CURRENT_BINARY_DIR}/ExocortexAlembicArnold/4" )
-	endif()
-ENDIF()
+message("")
 
-# softimage plugin
-IF(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Softimage/CMakeLists.txt")
-	if( WIN32 )
-		if( MSVC11 )
-			ADD_SUBDIRECTORY ( "${CMAKE_CURRENT_SOURCE_DIR}/Softimage/2015" "${CMAKE_CURRENT_BINARY_DIR}/ExocortexAlembicSoftimage2015" )
-		elseif( NOT MSVC10 AND NOT MSVC11 )
-			ADD_SUBDIRECTORY ( "${CMAKE_CURRENT_SOURCE_DIR}/Softimage/2012" "${CMAKE_CURRENT_BINARY_DIR}/ExocortexAlembicSoftimage" )
-			ADD_SUBDIRECTORY ( "${CMAKE_CURRENT_SOURCE_DIR}/Softimage/2014SP2" "${CMAKE_CURRENT_BINARY_DIR}/ExocortexAlembicSoftimage2014SP2" )
-		endif()
-	else()
-		ADD_SUBDIRECTORY ( "${CMAKE_CURRENT_SOURCE_DIR}/Softimage/2015" "${CMAKE_CURRENT_BINARY_DIR}/ExocortexAlembicSoftimage2015" )
-		ADD_SUBDIRECTORY ( "${CMAKE_CURRENT_SOURCE_DIR}/Softimage/2014SP2" "${CMAKE_CURRENT_BINARY_DIR}/ExocortexAlembicSoftimage2014SP2" )
-		ADD_SUBDIRECTORY ( "${CMAKE_CURRENT_SOURCE_DIR}/Softimage/2012" "${CMAKE_CURRENT_BINARY_DIR}/ExocortexAlembicSoftimage2012" )
-	endif()
-ENDIF()
+# Sets zlib's libraries
+set(ZLIB_LIBRARY_DIR "${EXOCORTEX_CRATE_DEPS}/libs/hdf5-1.8.20")
+set(ZLIB_LIBRARIES "${ZLIB_LIBRARY_DIR}/libzlib.lib")
 
-# maya plugin
-# guide to maya compiler versions: http://around-the-corner.typepad.com/adn/2012/06/maya-compiler-versions.html
-IF(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Maya/CMakeLists.txt")
-	if( WIN32 )
-		if( MSVC11 )
-			ADD_SUBDIRECTORY ( "${CMAKE_CURRENT_SOURCE_DIR}/Maya/2017"   "${CMAKE_CURRENT_BINARY_DIR}/ExocortexAlembicMaya/2017" )
-			ADD_SUBDIRECTORY ( "${CMAKE_CURRENT_SOURCE_DIR}/Maya/2016.5" "${CMAKE_CURRENT_BINARY_DIR}/ExocortexAlembicMaya/2016.5" )
-			ADD_SUBDIRECTORY ( "${CMAKE_CURRENT_SOURCE_DIR}/Maya/2016"   "${CMAKE_CURRENT_BINARY_DIR}/ExocortexAlembicMaya/2016" )
-			ADD_SUBDIRECTORY ( "${CMAKE_CURRENT_SOURCE_DIR}/Maya/2015"   "${CMAKE_CURRENT_BINARY_DIR}/ExocortexAlembicMaya/2015" )
-		elseif( MSVC10 )
-			ADD_SUBDIRECTORY ( "${CMAKE_CURRENT_SOURCE_DIR}/Maya/2014" "${CMAKE_CURRENT_BINARY_DIR}/ExocortexAlembicMaya/2014" )
-		endif()
-	else()
-		ADD_SUBDIRECTORY ( "${CMAKE_CURRENT_SOURCE_DIR}/Maya/2016.5" "${CMAKE_CURRENT_BINARY_DIR}/ExocortexAlembicMaya/2016.5" )
-		ADD_SUBDIRECTORY ( "${CMAKE_CURRENT_SOURCE_DIR}/Maya/2016" "${CMAKE_CURRENT_BINARY_DIR}/ExocortexAlembicMaya/2016" )
-		ADD_SUBDIRECTORY ( "${CMAKE_CURRENT_SOURCE_DIR}/Maya/2015" "${CMAKE_CURRENT_BINARY_DIR}/ExocortexAlembicMaya/2015" )
-		ADD_SUBDIRECTORY ( "${CMAKE_CURRENT_SOURCE_DIR}/Maya/2014" "${CMAKE_CURRENT_BINARY_DIR}/ExocortexAlembicMaya/2014" )
-	endif()
-ENDIF()
+message("zlib: Library:")
+message("zlib: Release/library:(${ZLIB_LIBRARIES})")
 
-# houdini plugin
-#IF(INCLUDE_ALEMBIC_HOUDINI)
-#IF(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Houdini/CMakeLists.txt")
-#	ADD_SUBDIRECTORY ( "${CMAKE_CURRENT_SOURCE_DIR}/Houdini" "${CMAKE_CURRENT_BINARY_DIR}/ExocortexAlembicHoudini" )
-#ENDIF()
-#ENDIF(INCLUDE_ALEMBIC_HOUDINI)
+# Sets zlib's includes
+set(ZLIB_INCLUDE_DIR "${EXOCORTEX_CRATE_DEPS}/includes/hdf5-1.8.20")
+message("zlib: include_dir:(${HDF5_INCLUDE_DIR})")
 
-# 3dsmax plugin
-if( WIN32 )
-	IF(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/3DSMax/CMakeLists.txt")
-		if( MSVC11 )
-			ADD_SUBDIRECTORY ( "${CMAKE_CURRENT_SOURCE_DIR}/3DSMax/2017" "${CMAKE_CURRENT_BINARY_DIR}/ExocortexAlembic3DSMax/2017" )
-			ADD_SUBDIRECTORY ( "${CMAKE_CURRENT_SOURCE_DIR}/3DSMax/2016" "${CMAKE_CURRENT_BINARY_DIR}/ExocortexAlembic3DSMax/2016" )
-			ADD_SUBDIRECTORY ( "${CMAKE_CURRENT_SOURCE_DIR}/3DSMax/2015" "${CMAKE_CURRENT_BINARY_DIR}/ExocortexAlembic3DSMax/2015" )
-		elseif( MSVC10 )
-			ADD_SUBDIRECTORY ( "${CMAKE_CURRENT_SOURCE_DIR}/3DSMax/2014" "${CMAKE_CURRENT_BINARY_DIR}/ExocortexAlembic3DSMax/2014" )
-			ADD_SUBDIRECTORY ( "${CMAKE_CURRENT_SOURCE_DIR}/3DSMax/2013" "${CMAKE_CURRENT_BINARY_DIR}/ExocortexAlembic3DSMax/2013" )
-		else()
-			ADD_SUBDIRECTORY ( "${CMAKE_CURRENT_SOURCE_DIR}/3DSMax/2012" "${CMAKE_CURRENT_BINARY_DIR}/ExocortexAlembic3DSMax/2012" )
-			ADD_SUBDIRECTORY ( "${CMAKE_CURRENT_SOURCE_DIR}/3DSMax/2011" "${CMAKE_CURRENT_BINARY_DIR}/ExocortexAlembic3DSMax/2011" )
-			ADD_SUBDIRECTORY ( "${CMAKE_CURRENT_SOURCE_DIR}/3DSMax/2010" "${CMAKE_CURRENT_BINARY_DIR}/ExocortexAlembic3DSMax/2010" )
-		endif()
-	ENDIF()
-endif()
+
+# ~~~~~~~~~~~~~~~~~~~
+# ~~~~~ IlmBase ~~~~~
+# ~~~~~~~~~~~~~~~~~~~
+
+message("")
+
+# Sets ilmbase's libraries
+set(ILMBASE_LIBRARY_DIR "${EXOCORTEX_CRATE_DEPS}/libs/ilmbase-2.2.0")
+file(GLOB ILMBASE_LIBRARIES "${ILMBASE_LIBRARY_DIR}/*.lib")
+
+message("ilmbase: Libraries:")
+foreach(LIB ${ILMBASE_LIBRARIES})
+	message("ilmbase: Release/library:(${LIB})")
+endforeach(LIB)
+
+# Sets ilmbase's includes
+set(ILMBASE_INCLUDE_DIR "${EXOCORTEX_CRATE_DEPS}/includes/ilmbase-2.2.0/OpenEXR")
+message("ilmbase: include_dir:(${ILMBASE_INCLUDE_DIR})")
+
+
+# ~~~~~~~~~~~~~~~~~~~
+# ~~~~~ Alembic ~~~~~
+# ~~~~~~~~~~~~~~~~~~~
+
+message("")
+
+# Sets Alembic version
+add_definitions(-Dalembic_ver=1.7.8)
+
+# Sets Alembic configuration
+add_definitions(-DNOMINMAX)
+add_definitions(-D_WINSOCKAPI_)
+add_definitions(-D_WINSOCKAPI2_)
+
+# Sets alembic's libraries
+set(ALEMBIC_LIBRARY_DIR "${EXOCORTEX_CRATE_DEPS}/libs/alembic-1.7.8")
+set(ALEMBIC_LIBRARIES "${ALEMBIC_LIBRARY_DIR}/Alembic.lib")
+
+message("alembic: Library:")
+message("alembic: Release/library:(${ALEMBIC_LIBRARIES})")
+
+# Sets alembic's includes
+set(ALEMBIC_INCLUDE_DIR "${EXOCORTEX_CRATE_DEPS}/includes/alembic-1.7.8" "${EXOCORTEX_CRATE_DEPS}/includes/alembic-1.7.8/Alembic")
+foreach(DIR ${ALEMBIC_INCLUDE_DIR})
+	message("alembic: include_dir:(${DIR})")
+endforeach(DIR)
+
+
+# ~~~~~~~~~~~~~~~~~
+# ~~~~~ Utils ~~~~~
+# ~~~~~~~~~~~~~~~~~
+
+set(EXOCORTEX_CRATE_UTILS_PROJECT_NAME "Exocortex-Crate-Utils")
+set(EXOCORTEX_CRATE_UTILS_DIR "${EXOCORTEX_CRATE_PATH}/Utils")
+add_subdirectory("${EXOCORTEX_CRATE_PATH}/Utils")
+
+
+# ~~~~~~~~~~~~~~~
+# ~~~~~ DCC ~~~~~
+# ~~~~~~~~~~~~~~~
+
+set(EXOCORTEX_CRATE_3DSMAX_PROJECT_NAME "Exocortex-Crate-3dsMax")
+set(EXOCORTEX_CRATE_3DSMAX_DIR "${EXOCORTEX_CRATE_PATH}/3DSMax")
+add_subdirectory("3DSMax")

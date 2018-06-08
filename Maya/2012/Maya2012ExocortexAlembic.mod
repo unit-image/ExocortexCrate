@@ -1,1 +1,0 @@
-+ Maya2012ExocortexAlembic 1.0 C:/ExocortexAlembic/Maya2012/Module

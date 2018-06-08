@@ -1,4 +1,4 @@
-LIBRARY ExocortexAlembic3dsmax1.0.dle
+LIBRARY Max2018ExocortexAlembic1.1.dlu
 EXPORTS
    LibDescription       @1       PRIVATE
    LibNumberClasses     @2       PRIVATE
