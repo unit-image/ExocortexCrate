@@ -30,9 +30,9 @@ You must clone this repository in the ```deps``` folder [Create it if it isn't e
 # Building
 
 To build ExocortexCrate you'll need to install some dependencies:
-	- CMake 3.7
-	- Visual studio 2015
-	- Exocortex-Crate-WindowsDeps
+  - CMake 3.7
+  - Visual studio 2015
+  - Exocortex-Crate-WindowsDeps
 
 These dependencies must be in your system environment path, except ```Exocortex-Crate-WindowsDeps``` that must be located in the ```deps``` folder.
 
