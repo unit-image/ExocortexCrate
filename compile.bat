@@ -24,6 +24,9 @@ echo.
 REM Generate the visual studio 2015 solution
 cmake -G"Visual Studio 14 2015 Win64" ..
 
+echo.
+echo compiling ...
+
 REM Build the project
 devenv.exe Exocortex-Crate.sln /build release /project INSTALL
 
