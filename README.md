@@ -43,10 +43,10 @@ A new folder named ```build_install``` will be created with the libraries and in
 
 To install ExocortexCrate, You need to download:
   - The latest release of ExocortexCrate (the release contains the ```build_install``` folder).
-  - The Exocortex-Crate-WindowsDeps repository.
+  - The ```Exocortex-Crate-WindowsDeps``` repository.
   
 Then,
 
-  1. Copy the ExocortexCrate dlu from ```build_install\bin``` to ```YOUR_3DS_MAX_FOLDER\Plugins``` folder.
-  2. Copy the 3DS Max scripts from ```build_install\3DSMax\MaxScripts``` to ```YOUR_3DS_MAX_FOLDER\scripts``` folder.
-  3. Copy the dependencies (Alembic' and ilmbase' dlls) in your ```YOUR_3DS_MAX_FOLDER``` folder.
+  1. Copy the ExocortexCrate's dlu from ```build_install\bin``` to ```YOUR_3DS_MAX_INSTALL_FOLDER\Plugins``` folder.
+  2. Copy the 3DS Max scripts from ```build_install\3DSMax\MaxScripts``` to ```YOUR_3DS_MAX_INSTALL_FOLDER\scripts``` folder.
+  3. Copy the dependencies (Alembic' and ilmbase' dlls) in your ```YOUR_3DS_MAX_INSTALL_FOLDER``` folder.
