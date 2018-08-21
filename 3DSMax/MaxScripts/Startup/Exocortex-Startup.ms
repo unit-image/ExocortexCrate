@@ -1,9 +1,11 @@
-include "Exocortex-Dialog-AlembicImport.mcr"
-include "Exocortex-Dialog-AlembicExport.mcr"
-include "Exocortex-Helper-AlembicTimeControl_Mesh.mcr"
-include "Exocortex-Helper-AlembicTimeControl.mcr"
-include "Exocortex-Metadata.mcr"
-include "Exocortex-AlembicTimeControlUtilities.mcr"
+mcr_directory = getFilenamePath (getThisScriptFilename())
+
+filein (mcr_directory+"..\\ExocortexCrate\\Exocortex-Dialog-AlembicImport.mcr")
+filein (mcr_directory+"..\\ExocortexCrate\\Exocortex-Dialog-AlembicExport.mcr")
+filein (mcr_directory+"..\\ExocortexCrate\\Exocortex-Helper-AlembicTimeControl_Mesh.mcr")
+filein (mcr_directory+"..\\ExocortexCrate\\Exocortex-Helper-AlembicTimeControl.mcr")
+filein (mcr_directory+"..\\ExocortexCrate\\Exocortex-Metadata.mcr")
+filein (mcr_directory+"..\\ExocortexCrate\\Exocortex-AlembicTimeControlUtilities.mcr")
 
 macroScript AlembicProfileStats
     category:"Alembic" 
