@@ -1,7 +1,7 @@
 # Exocortex Crate
 
 The professional grade, battle tested and feature filled Alembic suite.  
-**This repository compiles ExocortexCrate for 3DSMax 2018 only.**
+**This repository compiles ExocortexCrate for 3DSMax 2018 & 2019 only.**
 
 # Binary Downloads
 
@@ -25,7 +25,7 @@ for the plugins you require.
 To build the plugins you will require the external libraries. They are located in this repository:
 	https://github.com/unit-image/Exocortex-Crate-WindowsDeps
 
-You must clone this repository in the ```deps``` folder [Create it if it isn't exists].
+You must clone this repository in the ```deps``` folder [if it doesn't exists, create it].
 
 # How to build ExocortexCrate ?
 

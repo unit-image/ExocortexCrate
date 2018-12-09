@@ -7,7 +7,7 @@ cmake_minimum_required(VERSION 3.7)
 message("")
 
 # Sets max's libraries
-set(3DSMAX_LIBRARY_DIR "${EXOCORTEX_CRATE_DEPS}/libs/max-sdk-2018")
+set(3DSMAX_LIBRARY_DIR "${EXOCORTEX_CRATE_DEPS}/libs/max-sdk-2019")
 file(GLOB 3DSMAX_LIBRARIES "${3DSMAX_LIBRARY_DIR}/*.lib")
 
 message("max: Libraries:")
@@ -16,7 +16,7 @@ foreach(LIB ${3DSMAX_LIBRARIES})
 endforeach(LIB)
 
 # Sets boost's includes
-set(3DSMAX_INCLUDE_DIR "${EXOCORTEX_CRATE_DEPS}/includes/max-sdk-2018")
+set(3DSMAX_INCLUDE_DIR "${EXOCORTEX_CRATE_DEPS}/includes/max-sdk-2019")
 message("max: include_dir:(${3DSMAX_INCLUDE_DIR})")
 
 
