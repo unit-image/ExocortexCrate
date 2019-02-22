@@ -7,7 +7,7 @@ cmake_minimum_required(VERSION 3.7)
 message("")
 
 # Sets max's libraries
-set(3DSMAX_LIBRARY_DIR "${EXOCORTEX_CRATE_DEPS}/libs/max-sdk-2019")
+set(3DSMAX_LIBRARY_DIR "${EXOCORTEX_CRATE_DEPS}/libs/max-sdk-${MAX_VERSION}")
 file(GLOB 3DSMAX_LIBRARIES "${3DSMAX_LIBRARY_DIR}/*.lib")
 
 message("max: Libraries:")
@@ -16,7 +16,7 @@ foreach(LIB ${3DSMAX_LIBRARIES})
 endforeach(LIB)
 
 # Sets boost's includes
-set(3DSMAX_INCLUDE_DIR "${EXOCORTEX_CRATE_DEPS}/includes/max-sdk-2019")
+set(3DSMAX_INCLUDE_DIR "${EXOCORTEX_CRATE_DEPS}/includes/max-sdk-${MAX_VERSION}")
 message("max: include_dir:(${3DSMAX_INCLUDE_DIR})")
 
 
@@ -29,7 +29,7 @@ message("${EXOCORTEX_CRATE_3DSMAX_PROJECT_NAME}: BUILD ENABLE")
 message("${EXOCORTEX_CRATE_3DSMAX_PROJECT_NAME}: Library:(SHARED)")
 
 # Sets Exocortex-Crate-3dsMax configuration
-add_definitions(-Dcrate_Max_Version=2018)
+add_definitions(-Dcrate_Max_Version=${MAX_VERSION})
 
 # Sets Exocortex-Crate-3dsMax compiler flags
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zm124")
