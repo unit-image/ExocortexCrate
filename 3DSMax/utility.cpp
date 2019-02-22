@@ -1,16 +1,34 @@
 #include "stdafx.h"
 
 #include <hash_map>
+#include <regex>
+#include <string>
 
 #include "Alembic.h"
 #include "AlembicIntermediatePolyMesh3DSMax.h"
 #include "SceneEnumProc.h"
 #include "Utility.h"
 
+void listenerError(const char* msg)
+{
+	ExecuteMAXScriptScript(TEXT(  // Just print a "heads up" message in read
+		"python.execute @\"import sys; sys.stderr.write('^^^ Exocortex Alembic ERROR ^^^\\n')\""));
+	/*
+	// WIP: Escape message and print it to MaxListener
+	std::string message(msg);
+	std::regex pattern("\\");
+	const char* substitute = "\\\\";
+	message = std::regex_replace(message, pattern, substitute);
+	ExecuteMAXScriptScript(message);
+	*/
+}
+
 void logError(const char* msg)
 {
   mprintf(EC_UTF8_to_TCHAR("Exocortex Alembic Error: %s\n"),
           EC_UTF8_to_TCHAR(msg));
+  listenerError(msg);
+
 }
 void logWarning(const char* msg)
 {
